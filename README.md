@@ -1,6 +1,6 @@
-# SLUUG STLLUG Marketing Content Generation
+# SLUUG/STLLUG Marketing Content Generation
 
-The code in this repository is used to supplement our regular meeting content with "marketing" material that can be used to spread the word about upcoming SLUUG and STLLUG meetings. This content includes things like:
+The code in this repository is used to supplement our regular meeting content with "marketing" material that can be used to spread the word about our SLUUG and STLLUG meetings. This content includes things like:
 
 - Enthusiastic tweets that encourage people to attend the meeting.
 - Titles we can use when the recording of the meeting is posted to YouTube.
@@ -8,7 +8,7 @@ The code in this repository is used to supplement our regular meeting content wi
 
 # Running the Script
 
-This guide will help you run the script for generating marketing content for SLUUG and STLLUG meetings. Follow these steps to get started:
+This guide will help you run the script. Follow these steps to get started:
 
 ## Prerequisites
 
@@ -28,12 +28,16 @@ This guide will help you run the script for generating marketing content for SLU
        ```
        Replace `your_api_key_here` with your actual API key. This will set the API key for the current user. You will need to restart PowerShell for the changes to take effect.
 
+## OpenAI API Cost
+
+OpenAI API prices fluctuate. As of 2024-06-15, each run of this script costs approximately fifteen cents. ($0.15)
+
 ## Setup
 
 1. **Clone the Repository**: Clone this repository to your local machine using your preferred Git client or the command line:
 
     ```sh
-    git clone <repository-url>
+    git clone git@github.com:seantwie03/sluug_stllug_generation.git
     ```
 
 2. **Install Dependencies**: Navigate to the root directory of the cloned repository and install the required Node.js dependencies:
@@ -42,26 +46,27 @@ This guide will help you run the script for generating marketing content for SLU
     npm install
     ```
 
-3. **Create the Input File**: You need to create or obtain a JSON file that contains the meeting information. This script parses the file name to know the meeting type (SLUUG or STLLUG) and meeting date. In order to parse correctly the input file must follow this naming convention:
-- The first 10 digits of the file name are the date of the meeting in `YYYY-MM-DD` format.
-    - Example for January 21, 2021: 2021-01-21
-- The end of the file name must be exactly `stllug.json` or `sluug.json`.
+3. **Create the Input File**: You need to create or obtain a JSON file that contains the meeting information. This script parses the file name to know the meeting date and meeting type (SLUUG or STLLUG). In order to parse correctly the input file must follow this naming convention:
+    - The first 10 digits of the file name are the date of the meeting in `YYYY-MM-DD` format.
+        - Example for January 21, 2021: 2021-01-21
+    - The end of the file name must be exactly `stllug.json` or `sluug.json`.
+    - See the files [test_data](test_data) folder for full examples.
 
-The content inside the file must follow a specific schema. At a minimum, the JSON file must have the fields shown in the [test_data\2021-01-21_stllug.json](test_data\2021-01-21_stllug.json) example file. Ideally, you would add a bit of additional information, such as the `meetupUrl` and `references` as shown in the [test_data\2021-01-13_sluug.json](test_data\2021-01-13_sluug.json) example file. The script uses [zod](https://github.com/colinhacks/zod) to validate that the file contents matches this schema. If a mandatory field is missing you will receive an error message in your terminal.
+    The content inside the file must be valid JSON and follow a specific schema in order to parse correctly. At a minimum, the JSON file must have all the fields shown in the [test_data\2021-01-21_stllug.json](test_data\2021-01-21_stllug.json) example file. Ideally, you would add a bit of additional information, such as the `meetupUrl` and `references` as shown in the [test_data\2021-01-13_sluug.json](test_data\2021-01-13_sluug.json) example file. The script uses [zod](https://github.com/colinhacks/zod) to validate that the file contents matches this schema. If a mandatory field is missing you will receive an error message in your terminal.
 
 ## Running the Script
 
 After completing the setup, you can run the script using:
 
-    ```sh
-    npm start -- <path-to-your-input-file>
-    ```
+```sh
+npm start -- <path-to-your-input-file>
+```
 
-    For example, if your input file is located in the root of the project:
+For example, if your input file is located in the root of the project:
 
-    ```sh
-    npm start -- ./2021-01-13_sluug.json
-    ```
+```sh
+npm start -- ./2024-02-14_sluug.json
+```
 
 ## Output
 
