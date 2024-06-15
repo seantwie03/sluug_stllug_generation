@@ -3,17 +3,7 @@
         {
             "title": "openVAS ~ Major Upgrade",
             "presenterNames": ["Tony Zafiropoulos"],
-            "tags": ["openVAS", "vulnerability-scanner", "security"],
-            "abstract": "'OpenVAS (Open Vulnerability Assessment Scanner) is a full-featured vulnerability scanner. Its capabilities include unauthenticated testing, authenticated testing, various high level and low level Internet and industrial protocols, performance tuning for large-scale scans and a powerful internal programming language to implement any type of vulnerability test.",
-            "references": [
-                {
-                    "url": "https://www.geeksforgeeks.org/whereis-command-in-linux-with-examples/",
-                    "linkText": "whereis command with examples"
-                },
-                {
-                    "url": "https://linux.die.net/man/1/whereis"
-                }
-            ]
+            "abstract": "'OpenVAS (Open Vulnerability Assessment Scanner) is a full-featured vulnerability scanner. Its capabilities include unauthenticated testing, authenticated testing, various high level and low level Internet and industrial protocols, performance tuning for large-scale scans and a powerful internal programming language to implement any type of vulnerability test."
         }
     ]
 }
