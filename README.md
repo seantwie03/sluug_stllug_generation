@@ -43,6 +43,7 @@ OpenAI API prices fluctuate. As of 2024-06-15, each run of this script costs app
 2. **Install Dependencies**: Navigate to the root directory of the cloned repository and install the required Node.js dependencies:
 
     ```sh
+    cd ./sluug_stllug_generation
     npm install
     ```
 
