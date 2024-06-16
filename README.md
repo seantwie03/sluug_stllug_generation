@@ -80,10 +80,10 @@ The script outputs to the `dist` directory. After running the script you should 
 
 To use these files on the `sluug_stllug_site`, copy them into the appropriate content directory.
 
-## Possible Improvements
+## TODO
 
 - Have AI generate a high-level summary of the key technology. For example, if a presentation is about [Multipass](https://multipass.run/) have the AI generate a couple sentences explaining what Multipass is. Then the visitor to the website can have more information when deciding if they want to attend the meeting or not.
     - Also, use information from references (RAG-ish)
-- Modify the call to generate tags. Ask the AI to identify the key technology. Then as the AI to identify the key technique or concept. This may produce better results than asking the AI to generate 1-2 tags based on the key technology, technique, or concept of the presentation.
-- Modify the call to generate YouTube titles to be like the call to generate images. If there are multiple presentations, generate one title for the base, one for the main, and one combined. If there is only a single presentation generate three titles for it.
+- Modify the call to generate YouTube titles to be like the call to generate images. If there are multiple presentations, generate one title for each presentation, and one combined. If there is only a single presentation generate three titles for it.
+- Add devcontainer
 - Extract repetitive openAI API call logic to a function (low priority)
