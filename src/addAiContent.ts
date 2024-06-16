@@ -20,6 +20,7 @@ import {
     youTubeTitleToolParamsSchema,
     zodFunctionVoid,
 } from "./models.js";
+import sharp from "sharp";
 
 /**
  * Logs detailed information to the console, if verbose logging is enabled.
@@ -424,13 +425,34 @@ async function generateImage(
                     .toLowerCase()}.png`;
                 const generatedImagePath = path.join(directoryPath, fileName);
 
-                const file = createWriteStream(generatedImagePath);
-
+                // Inside your try block, after downloading the image
                 https.get(imageUrl, (response) => {
-                    response.pipe(file);
-                });
+                    // Use sharp to resize and compress the image
+                    const transformer = sharp()
+                        .resize(1280, 720) // Resize to 1280x720
+                        .png({ quality: 80 }); // Start with a default quality
 
-                console.log(`Image ${i} saved at ${generatedImagePath}`);
+                    response.pipe(transformer).toBuffer(async (err, buffer, info) => {
+                        if (err) throw err;
+
+                        let finalBuffer = buffer;
+                        // If the file size is greater than 2MB, adjust the quality
+                        if (info.size > 2 * 1024 * 1024) {
+                            const qualityForSize = Math.max(10, (2 * 1024 * 1024 * 80) / info.size); // Adjust quality based on initial compression
+                            console.warn(
+                                "Image size is too large. Adjusting quality to",
+                                qualityForSize
+                            );
+                            finalBuffer = await sharp(buffer)
+                                .png({ quality: qualityForSize })
+                                .toBuffer();
+                        }
+
+                        // Write the final buffer to file
+                        await writeFile(generatedImagePath, finalBuffer);
+                        console.log(`Image ${i} resized to 1280x720 and saved as ${fileName}`);
+                    });
+                });
                 return { src: `./${fileName}`, alt: revisedPrompt };
             } catch (error) {
                 throw new Error(`Error generating image ${i}}:` + error);
