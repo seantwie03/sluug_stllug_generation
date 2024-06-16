@@ -1,27 +1,45 @@
+import { createWriteStream } from "node:fs";
 import { FileHandle, open, writeFile } from "node:fs/promises";
-import { fileURLToPath } from "node:url";
+import https from "node:https";
 import path, { dirname, resolve } from "node:path";
 import { argv } from "node:process";
+import { fileURLToPath } from "node:url";
 import OpenAI from "openai";
+import { sluugDescription } from "./constants.js";
 import {
     Image,
-    ImageDesignsToolParams,
     Meeting,
     MeetingType,
     Presentation,
     TagToolParams,
     TweetToolParams,
     YouTubeTitleToolParams,
-    imageDesignsToolParamsSchema,
     meetingSchema,
     tagToolParamsSchema,
     tweetToolParamsSchema,
     youTubeTitleToolParamsSchema,
     zodFunctionVoid,
 } from "./models.js";
-import { sluugDescription } from "./constants.js";
-import { createWriteStream } from "node:fs";
-import https from "node:https";
+
+/**
+ * Logs detailed information to the console, if verbose logging is enabled.
+ * This function checks the global verbose flag and, if set, outputs the provided message.
+ *
+ * @param message The message to log.
+ */
+export function verboseLog(...args: any[]) {
+    if (isVerbose) {
+        args.forEach((arg) => {
+            if (Array.isArray(arg)) {
+                arg.forEach((element) => verboseLog(element));
+            } else if (typeof arg === "object") {
+                console.dir(arg, { depth: null });
+            } else {
+                console.log(arg);
+            }
+        });
+    }
+}
 
 function extractInputFilePathFromArgs(): string {
     if (argv.length < 3) {
@@ -68,14 +86,14 @@ async function openMeetingFile(filePath: string): Promise<FileHandle> {
     try {
         return open(filePath);
     } catch (error) {
-        console.error(`Error reading or parsing JSON Meeting file: ${filePath}`);
+        console.error(`Error reading JSON Meeting file: ${filePath}`);
         throw error;
     }
 }
 
 async function parseMeetingFile(file: FileHandle, meetingDate: Date): Promise<Meeting> {
-    const jsonBuffer = await file.readFile();
     try {
+        const jsonBuffer = await file.readFile();
         return { ...meetingSchema.parse(JSON.parse(jsonBuffer.toString())), meetingDate };
     } catch (error) {
         console.error(`Error parsing JSON Meeting file: ${inputFilePath}`);
@@ -119,10 +137,11 @@ function convertPresentationToPromptWithMeetingDate(
  * @returns an array of tags for this presentation in lower-kebab-case.
  */
 function tagTool(args: TagToolParams): string[] {
-    return args.tags.map((tag) => tag.replace(" ", "-").toLowerCase());
+    return args.tags.map((tag) => tag.trimStart().trimEnd().replace(" ", "-").toLowerCase());
 }
 
 async function generateTags(openAi: OpenAI, presentation: Presentation): Promise<Presentation> {
+    console.log("Calling OpenAI API to generate tags for presentation:", presentation.title);
     const result = await openAi.beta.chat.completions
         .runTools({
             model: "gpt-4o",
@@ -188,6 +207,7 @@ async function generateTweets(
     presentation: Presentation,
     meetingDate: Date
 ): Promise<Presentation> {
+    console.log("Calling OpenAI API to generate tweets for presentation:", presentation.title);
     const result = await openAi.beta.chat.completions
         .runTools({
             model: "gpt-4o",
@@ -242,7 +262,7 @@ function addLinkToTweets(presentation: Presentation, meetupUrl: string | undefin
     if (!presentation.tweets) {
         throw new Error("Presentation does not contain any tweets");
     }
-    // TODO: If meetupUrl is null, put SLUUG Site URL instead.
+    // TODO: If meetupUrl is null, put SLUUG/STLLUG Site URL instead.
     return {
         ...presentation,
         tweets: presentation.tweets.map((tweet) => `${tweet} ${meetupUrl}`.trimEnd()),
@@ -254,15 +274,15 @@ function addLinkToTweets(presentation: Presentation, meetupUrl: string | undefin
  * make the OpenAI API return JSON that matches a specific schema is to have it call a function that takes the
  * specific schema as it's parameter. This function only exists to 'force' OpenAI API to return valid JSON.
  *
- * @param args Contains an array of short and enthusiastic YouTube Titles that summarize the presentation.
+ * @param args Contains an array of short YouTube Titles for the presentation.
  *             The Params has to be type Object due  to limitation with the OpenAI API.
- * @returns an array of short and enthusiastic YouTube Titles that summarize the presentation.
+ * @returns an array of short YouTube Titles for the presentation.
  */
 function youTubeTitleTool(args: YouTubeTitleToolParams): string[] {
     return args.titles;
 }
 
-function addMeetingDateAndType(
+function prefixTitleWithMeetingDateAndType(
     generatedTitles: string[],
     meetingDate: Date,
     meetingType: MeetingType
@@ -273,6 +293,7 @@ function addMeetingDateAndType(
 }
 
 async function generateYouTubeTitles(openAi: OpenAI, meeting: Meeting): Promise<Meeting> {
+    console.log("Calling OpenAI API to generate YouTube Titles.");
     const result = await openAi.beta.chat.completions
         .runTools({
             model: "gpt-4o",
@@ -324,7 +345,7 @@ async function generateYouTubeTitles(openAi: OpenAI, meeting: Meeting): Promise<
     const generatedTitles = JSON.parse(result) as string[];
     return {
         ...meeting,
-        youtubeTitles: addMeetingDateAndType(generatedTitles, meetingDate, meetingType),
+        youtubeTitles: prefixTitleWithMeetingDateAndType(generatedTitles, meetingDate, meetingType),
     };
 }
 
@@ -332,6 +353,7 @@ async function generateImageDesignIdeaFromPrompt(
     openAi: OpenAI,
     presentationPrompt: string
 ): Promise<string> {
+    console.log("Calling OpenAI API to generate a design idea for the image.");
     const result = await openAi.chat.completions.create({
         model: "gpt-4o",
         messages: [
@@ -363,72 +385,9 @@ async function generateImageDesignIdeaFromPrompt(
     return result.choices[0].message.content;
 }
 
-// /**
-//  * This function is used to ensure the AI returns design ideas in proper JSON format. As of now, the easiest way to
-//  * make the OpenAI API return JSON that matches a specific schema is to have it call a function that takes the
-//  * specific schema as it's parameter. This function only exists to 'force' OpenAI API to return valid JSON.
-//  *
-//  * @param args Contains an array of design ideas for the presentation.
-//  *             The Params has to be type Object due  to limitation with the OpenAI API.
-//  * @returns an array of design ideas for the presentation.
-//  */
-// function imageDesignsGenerationTool(args: ImageDesignsToolParams): string[] {
-//     return args.designs;
-// }
-//
-// async function generateImageDesignIdeas(openAi: OpenAI, meeting: Meeting): Promise<string[]> {
-//     const result = await openAi.beta.chat.completions
-//         .runTools({
-//             model: "gpt-4o",
-//             tools: [
-//                 zodFunctionVoid({
-//                     function: imageDesignsGenerationTool,
-//                     schema: imageDesignsToolParamsSchema,
-//                     description:
-//                         "Call this function to to generate the images from the design ideas.",
-//                 }),
-//             ],
-//             tool_choice: {
-//                 type: "function",
-//                 function: {
-//                     name: "imageDesignsGenerationTool",
-//                 },
-//             },
-//             messages: [
-//                 {
-//                     role: "system",
-//                     content:
-//                         sluugDescription +
-//                         `The following presentation will be given to the St. Louis Linux/Unix Users Group. Prior to the presentation, an announcement will be posted on our blog. To be more engaging the blog should have a large image at the top. The image should not include any words or letters. It should include the logos of the technologies covered in the presentation. The style should be futuristic and technology focused. Generate three design ideas for this image. Then, call the imagesGenerationTool to generate the images.`,
-//                 },
-//                 {
-//                     role: "user",
-//                     content: [
-//                         {
-//                             type: "text",
-//                             text: `The title of the presentation is: ${
-//                                 meeting.presentations[0].title
-//                             }.
-//                                 The presenter(s) are: ${meeting.presentations[0].presenterNames.join()}.
-//                                 This presentation abstract is as follows: ${
-//                                     meeting.presentations[0].abstract
-//                                 }`,
-//                         },
-//                     ],
-//                 },
-//             ],
-//             temperature: 1,
-//             max_tokens: 256,
-//             top_p: 1,
-//             frequency_penalty: 0,
-//             presence_penalty: 0,
-//         })
-//         .finalFunctionCallResult();
-//     if (!result) {
-//         throw new Error("OpenAI did not call the tool.");
-//     }
-//     return JSON.parse(result) as string[];
-// }
+function getFileNamePrefix(meetingDate: Date, meetingType: MeetingType) {
+    return `${meetingDate.toISOString().slice(0, 10)}_${meetingType.toLowerCase()}`;
+}
 
 async function generateImage(
     openAi: OpenAI,
@@ -439,6 +398,7 @@ async function generateImage(
     return Promise.all(
         await designIdeas.map(async (design, i) => {
             try {
+                console.log(`Calling OpenAI API to generate a image ${i}.`);
                 const response = await openAi.images.generate({
                     model: "dall-e-3",
                     prompt: design,
@@ -450,6 +410,7 @@ async function generateImage(
                     throw new Error("No image url returned from OpenAI.");
                 }
                 const imageUrl = response.data[0].url;
+
                 if (!response.data[0].revised_prompt) {
                     throw new Error("No revised prompt returned from OpenAI.");
                 }
@@ -461,7 +422,6 @@ async function generateImage(
                     .replace(/[.,\/#!$%\^&\*'";:{}=_`~()]/g, "")
                     .replaceAll(" ", "-")
                     .toLowerCase()}.png`;
-
                 const generatedImagePath = path.join(directoryPath, fileName);
 
                 const file = createWriteStream(generatedImagePath);
@@ -479,14 +439,6 @@ async function generateImage(
     );
 }
 
-function getFileNamePrefix(meetingDate: Date, meetingType: MeetingType) {
-    if (meetingType === "SLUUG") {
-        return `${meetingDate.toISOString().slice(0, 10)}_sluug`;
-    } else {
-        return `${meetingDate.toISOString().slice(0, 10)}_stllug`;
-    }
-}
-
 async function writeMeetingToFile(outputDir: string, outputFileName: string, meeting: Meeting) {
     const outputFilePath = path.join(outputDir, outputFileName);
     try {
@@ -499,12 +451,14 @@ async function writeMeetingToFile(outputDir: string, outputFileName: string, mee
     }
 }
 
+// Main
+const isVerbose = process.argv.includes("-v");
 const inputFilePath = extractInputFilePathFromArgs();
 const meetingDate = parseMeetingDateFromFileName(inputFilePath);
 const meetingType = parseMeetingTypeFromFileName(inputFilePath);
 const meetingFromFile = await parseMeetingFile(await openMeetingFile(inputFilePath), meetingDate);
-console.log("meetingFromFile:");
-console.dir(meetingFromFile, { depth: null });
+verboseLog("meetingFromFile:");
+verboseLog(meetingFromFile);
 const apiKey = extractApiKeyFromEnv();
 const openAi = new OpenAI({
     apiKey: apiKey,
@@ -520,8 +474,8 @@ const meetingWithTags = {
         })
     ),
 };
-console.log("meetingWithTags:");
-console.dir(meetingWithTags, { depth: null });
+verboseLog("meetingWithTags:");
+verboseLog(meetingWithTags);
 
 // Add Tweets
 const meetingWithTweets = {
@@ -541,13 +495,13 @@ const meetingWithTweets = {
         })
     ),
 };
-console.log("meetingWithTweets:");
-console.dir(meetingWithTweets, { depth: null });
+verboseLog("meetingWithTweets:");
+verboseLog(meetingWithTweets);
 
 // Add YouTube Titles
 const meetingWithYouTubeTitles = await generateYouTubeTitles(openAi, meetingWithTweets);
-console.log("meetingWithYouTubeTitles:");
-console.dir(meetingWithYouTubeTitles, { depth: null });
+verboseLog("meetingWithYouTubeTitles:");
+verboseLog(meetingWithYouTubeTitles);
 
 // // Add Images
 let designIdeas: string[] = [];
@@ -581,7 +535,7 @@ if (meetingWithYouTubeTitles.presentations.length === 1) {
         )
     );
 }
-console.log("designIdeas:", designIdeas);
+verboseLog("designIdeas:", designIdeas);
 const fileNamePrefix = getFileNamePrefix(meetingDate, meetingType);
 const outputDir = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const meetingWithImages = {
@@ -589,8 +543,8 @@ const meetingWithImages = {
     image: await generateImage(openAi, designIdeas, outputDir, fileNamePrefix),
 };
 
-console.log("meetingWithImages:");
-console.dir(meetingWithImages, { depth: null });
+verboseLog("meetingWithImages:");
+verboseLog(meetingWithImages);
 
 // Save the updated meeting to the file
 await writeMeetingToFile(outputDir, `${fileNamePrefix}.json`, meetingWithImages);
