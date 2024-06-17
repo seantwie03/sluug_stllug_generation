@@ -37,7 +37,7 @@ export type MeetingType = z.infer<typeof meetingTypeSchema>;
 export type Link = z.infer<typeof linkSchema>;
 export type Image = z.infer<typeof imageSchema>;
 export type Presentation = z.infer<typeof presentationSchema>;
-export type Meeting = z.infer<typeof meetingSchema> & { meetingDate: Date };
+export type Meeting = z.infer<typeof meetingSchema>;
 
 export const tweetToolParamsSchema = z.object({
     tweets: z
@@ -64,7 +64,7 @@ export const youTubeTitleToolParamsSchema = z.object({
         .array(z.string())
         .length(3)
         .describe(
-            "An array of 3 three very short Titles for recording of the presentation that will be posted to YouTube."
+            "An array of 3 three Titles for recording of the presentation(s) that will be posted to YouTube."
         ),
 });
 
@@ -74,7 +74,7 @@ export const imageDesignsToolParamsSchema = z.object({
     designs: z
         .array(z.string())
         .length(3)
-        .describe("An array of 3 design ideas for an image to represent the presentation."),
+        .describe("An array of 3 design ideas for an image to represent the presentation(s)."),
 });
 
 export type ImageDesignsToolParams = z.infer<typeof imageDesignsToolParamsSchema>;

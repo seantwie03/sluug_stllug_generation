@@ -84,6 +84,7 @@ To use these files on the `sluug_stllug_site`, copy them into the appropriate co
 
 - Have AI generate a high-level summary of the key technology. For example, if a presentation is about [Multipass](https://multipass.run/) have the AI generate a couple sentences explaining what Multipass is. Then the visitor to the website can have more information when deciding if they want to attend the meeting or not.
     - Also, use information from references (RAG-ish)
-- Modify the call to generate YouTube titles to be like the call to generate images. If there are multiple presentations, generate one title for each presentation, and one combined. If there is only a single presentation generate three titles for it.
+- Consider adding tag to presentationSchema to specify if it is a main presentation
+    - main: boolean?
 - Add devcontainer
 - Extract repetitive openAI API call logic to a function (low priority)

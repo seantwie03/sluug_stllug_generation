@@ -92,10 +92,10 @@ async function openMeetingFile(filePath: string): Promise<FileHandle> {
     }
 }
 
-async function parseMeetingFile(file: FileHandle, meetingDate: Date): Promise<Meeting> {
+async function parseMeetingFile(file: FileHandle): Promise<Meeting> {
     try {
         const jsonBuffer = await file.readFile();
-        return { ...meetingSchema.parse(JSON.parse(jsonBuffer.toString())), meetingDate };
+        return { ...meetingSchema.parse(JSON.parse(jsonBuffer.toString())) };
     } catch (error) {
         console.error(`Error parsing JSON Meeting file: ${inputFilePath}`);
         throw error;
@@ -104,28 +104,32 @@ async function parseMeetingFile(file: FileHandle, meetingDate: Date): Promise<Me
     }
 }
 
-function convertPresentationToPrompt(presentation: Presentation): string {
-    return `The title of the presentation is: ${presentation.title}.
-    The presenter(s) are: ${presentation.presenterNames.join()}.
-    This presentation abstract is as follows: ${presentation.abstract}
-    ${presentation.tags ? `Tags: ${presentation.tags.join()}` : ""}`;
-}
-
-function convertPresentationsToPrompt(presentations: Presentation[]): string {
-    return presentations
-        .map((presentation) => convertPresentationToPrompt(presentation))
-        .join("\n");
-}
-
-function convertPresentationToPromptWithMeetingDate(
+function convertPresentationToPrompt(
     presentation: Presentation,
-    meetingDate: Date
+    includePresenters: boolean = false,
+    meetingDate?: Date
 ): string {
-    return `This presentation will be given on: ${meetingDate.toISOString().slice(0, 10)}.
+    return `${
+        meetingDate
+            ? `This presentation will be given on: ${meetingDate.toISOString().slice(0, 10)}`
+            : ""
+    }.
     The title of the presentation is: ${presentation.title}.
-    The presenter(s) are: ${presentation.presenterNames.join()}.
+    ${includePresenters ? `The presenter(s) are: ${presentation.presenterNames.join()}.` : ""}
     This presentation abstract is as follows: ${presentation.abstract}
     ${presentation.tags ? `Tags: ${presentation.tags.join()}` : ""}`;
+}
+
+function convertPresentationsToPrompt(
+    presentations: Presentation[],
+    includePresenters: boolean = false,
+    meetingDate?: Date
+): string {
+    return presentations
+        .map((presentation) =>
+            convertPresentationToPrompt(presentation, includePresenters, meetingDate)
+        )
+        .join("\n");
 }
 
 /**
@@ -238,10 +242,7 @@ async function generateTweets(
                     content: [
                         {
                             type: "text",
-                            text: convertPresentationToPromptWithMeetingDate(
-                                presentation,
-                                meetingDate
-                            ),
+                            text: convertPresentationToPrompt(presentation, true, meetingDate),
                         },
                     ],
                 },
@@ -293,7 +294,10 @@ function prefixTitleWithMeetingDateAndType(
     });
 }
 
-async function generateYouTubeTitles(openAi: OpenAI, meeting: Meeting): Promise<Meeting> {
+async function generateYouTubeTitleFromPrompt(
+    openAi: OpenAI,
+    presentationPrompt: string
+): Promise<string[]> {
     console.log("Calling OpenAI API to generate YouTube Titles.");
     const result = await openAi.beta.chat.completions
         .runTools({
@@ -303,7 +307,7 @@ async function generateYouTubeTitles(openAi: OpenAI, meeting: Meeting): Promise<
                     function: youTubeTitleTool,
                     schema: youTubeTitleToolParamsSchema,
                     description:
-                        "Call this function to finalize three titles for the YouTube video of this presentation.",
+                        "Call this function to finalize three titles for the YouTube video of the presentation(s).",
                 }),
             ],
             tool_choice: {
@@ -317,18 +321,14 @@ async function generateYouTubeTitles(openAi: OpenAI, meeting: Meeting): Promise<
                     role: "system",
                     content:
                         sluugDescription +
-                        `The following presentation was given to the St. Louis Linux/Unix Users Group. A video recording of the presentation will be posted to YouTube. Please generate three very short Titles for the YouTube video. Do not include any hashtags. Then, call the youTubeTitleTool to finalize the titles.`,
+                        `The following presentation(s) were given to the St. Louis Linux/Unix Users Group. A video recording of the presentation(s) will be posted to YouTube. Please generate three Titles for the YouTube video. Do not include any hashtags. Then, call the youTubeTitleTool to finalize the titles.`,
                 },
                 {
                     role: "user",
-                    // Most time the BASE and MAIN presentations have nothing in common. This makes it nearly impossible
-                    // to come up with a YouTube title that includes both. Instead, have the YouTube title be only
-                    // about the MAIN presentation.
-                    // The Zod schema specifies a minimum of 1 presentation, so calling [0] index is safe.
                     content: [
                         {
                             type: "text",
-                            text: convertPresentationToPrompt(meeting.presentations[0]),
+                            text: presentationPrompt,
                         },
                     ],
                 },
@@ -344,10 +344,7 @@ async function generateYouTubeTitles(openAi: OpenAI, meeting: Meeting): Promise<
         throw new Error("OpenAI did not call the tool.");
     }
     const generatedTitles = JSON.parse(result) as string[];
-    return {
-        ...meeting,
-        youtubeTitles: prefixTitleWithMeetingDateAndType(generatedTitles, meetingDate, meetingType),
-    };
+    return prefixTitleWithMeetingDateAndType(generatedTitles, meetingDate, meetingType);
 }
 
 async function generateImageDesignIdeaFromPrompt(
@@ -362,7 +359,7 @@ async function generateImageDesignIdeaFromPrompt(
                 role: "system",
                 content:
                     sluugDescription +
-                    `The following presentation will be given to the St. Louis Linux/Unix Users Group. Prior to the presentation, an announcement will be posted on our blog. To be more engaging the blog should have a large image at the top. The image should not include any words or letters. It should include the logos of the technologies covered in the presentation. The style should be futuristic and technology focused. Generate one design idea for this image.`,
+                    `The following presentation(s) will be given to the St. Louis Linux/Unix Users Group. Prior to the presentation(s), an announcement will be posted on our blog. To be more engaging the blog should have a large image at the top. The image should not include any words or letters. It should include the logos of the technologies covered in the presentations. The style should be futuristic and technology focused. Generate one design idea for this image.`,
             },
             {
                 role: "user",
@@ -478,7 +475,7 @@ const isVerbose = process.argv.includes("-v");
 const inputFilePath = extractInputFilePathFromArgs();
 const meetingDate = parseMeetingDateFromFileName(inputFilePath);
 const meetingType = parseMeetingTypeFromFileName(inputFilePath);
-const meetingFromFile = await parseMeetingFile(await openMeetingFile(inputFilePath), meetingDate);
+const meetingFromFile = await parseMeetingFile(await openMeetingFile(inputFilePath));
 verboseLog("meetingFromFile:");
 verboseLog(meetingFromFile);
 const apiKey = extractApiKeyFromEnv();
@@ -521,7 +518,41 @@ verboseLog("meetingWithTweets:");
 verboseLog(meetingWithTweets);
 
 // Add YouTube Titles
-const meetingWithYouTubeTitles = await generateYouTubeTitles(openAi, meetingWithTweets);
+let youTubeTitles: string[] = [];
+// If this is a meeting with a single presentation (STLLUG), generate three YouTube Titles for that presentation.
+if (meetingWithTweets.presentations.length === 1) {
+    for (let i = 0; i < 3; i++) {
+        youTubeTitles = youTubeTitles.concat(
+            await generateYouTubeTitleFromPrompt(
+                openAi,
+                // The zod schema specifies that at least one meeting should be passed in, so calling [0] index is safe.
+                convertPresentationToPrompt(meetingWithTweets.presentations[0])
+            )
+        );
+    }
+} else {
+    // If this is a meeting with multiple presentations (SLUUG), generate YouTube Titles for each presentation.
+    const titles = await Promise.all(
+        meetingWithTweets.presentations.map(async (presentation) => {
+            return await generateYouTubeTitleFromPrompt(
+                openAi,
+                convertPresentationToPrompt(presentation)
+            );
+        })
+    );
+    youTubeTitles = youTubeTitles.concat(titles.flat());
+    // And generate YouTube Titles for all presentations combined.
+    youTubeTitles = youTubeTitles.concat(
+        await generateYouTubeTitleFromPrompt(
+            openAi,
+            convertPresentationsToPrompt(meetingWithTweets.presentations)
+        )
+    );
+}
+const meetingWithYouTubeTitles = {
+    ...meetingWithTweets,
+    youTubeTitles,
+};
 verboseLog("meetingWithYouTubeTitles:");
 verboseLog(meetingWithYouTubeTitles);
 

@@ -17,7 +17,7 @@
         {
             "title": "Hand Held Music Box",
             "presenterNames": ["Lee Lammert"],
-            "abstract": "Ever wanted a multi-purpose stereo system that can be managed remotely? One built from that spare Raspberry Pi? Well, .. my answers were affirmative, so I grabbed a Pi and got to work. [google](google.com) <a href=\"www.google.com\">google</a>\nThis tutorial will follow my creation of a Pi based MP3 player that could also be used for things like YouTube."
+            "abstract": "Ever wanted a multi-purpose stereo system that can be managed remotely? One built from that spare Raspberry Pi? Well, .. my answers were affirmative, so I grabbed a Pi and got to work.\nThis tutorial will follow my creation of a Pi based MP3 player that could also be used for things like YouTube."
         }
     ],
     "meetupUrl": "https://www.meetup.com/saint-louis-unix-users-group/events/275585456/"
