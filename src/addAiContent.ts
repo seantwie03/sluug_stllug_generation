@@ -1,10 +1,10 @@
-import { createWriteStream } from "node:fs";
 import { FileHandle, open, writeFile } from "node:fs/promises";
 import https from "node:https";
 import path, { dirname, resolve } from "node:path";
 import { argv } from "node:process";
 import { fileURLToPath } from "node:url";
 import OpenAI from "openai";
+import sharp from "sharp";
 import { sluugDescription } from "./constants.js";
 import {
     Image,
@@ -20,7 +20,6 @@ import {
     youTubeTitleToolParamsSchema,
     zodFunctionVoid,
 } from "./models.js";
-import sharp from "sharp";
 
 /**
  * Logs detailed information to the console, if verbose logging is enabled.
@@ -28,7 +27,7 @@ import sharp from "sharp";
  *
  * @param message The message to log.
  */
-export function verboseLog(...args: any[]) {
+export function verboseLog(...args: unknown[]) {
     if (isVerbose) {
         args.forEach((arg) => {
             if (Array.isArray(arg)) {
@@ -106,7 +105,7 @@ async function parseMeetingFile(file: FileHandle): Promise<Meeting> {
 
 function convertPresentationToPrompt(
     presentation: Presentation,
-    includePresenters: boolean = false,
+    includePresenters = false,
     meetingDate?: Date
 ): string {
     return `${
@@ -122,7 +121,7 @@ function convertPresentationToPrompt(
 
 function convertPresentationsToPrompt(
     presentations: Presentation[],
-    includePresenters: boolean = false,
+    includePresenters = false,
     meetingDate?: Date
 ): string {
     return presentations
@@ -394,7 +393,7 @@ async function generateImage(
     fileNamePrefix: string
 ): Promise<Image[]> {
     return Promise.all(
-        await designIdeas.map(async (design, i) => {
+        designIdeas.map(async (design, i) => {
             try {
                 console.log(`Calling OpenAI API to generate a image ${i}.`);
                 const response = await openAi.images.generate({
@@ -417,7 +416,7 @@ async function generateImage(
                 const fileName = `${fileNamePrefix}_${revisedPrompt
                     ?.slice(0, 60)
                     .trimEnd()
-                    .replace(/[.,\/#!$%\^&\*'";:{}=_`~()]/g, "")
+                    .replace(/[.,/#!$%^&*'";:{}=_`~()]/g, "")
                     .replaceAll(" ", "-")
                     .toLowerCase()}.png`;
                 const generatedImagePath = path.join(directoryPath, fileName);
