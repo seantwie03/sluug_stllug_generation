@@ -18,7 +18,7 @@ import {
     tagToolParamsSchema,
     tweetToolParamsSchema,
     youTubeTitleToolParamsSchema,
-    zodFunctionVoid,
+    zodFunction,
 } from "./models.js";
 
 /**
@@ -150,7 +150,7 @@ async function generateTags(openAi: OpenAI, presentation: Presentation): Promise
         .runTools({
             model: "gpt-4o",
             tools: [
-                zodFunctionVoid({
+                zodFunction({
                     function: tagTool,
                     schema: tagToolParamsSchema,
                     description:
@@ -216,7 +216,7 @@ async function generateTweets(
         .runTools({
             model: "gpt-4o",
             tools: [
-                zodFunctionVoid({
+                zodFunction({
                     function: tweetTool,
                     schema: tweetToolParamsSchema,
                     description:
@@ -302,7 +302,7 @@ async function generateYouTubeTitleFromPrompt(
         .runTools({
             model: "gpt-4o",
             tools: [
-                zodFunctionVoid({
+                zodFunction({
                     function: youTubeTitleTool,
                     schema: youTubeTitleToolParamsSchema,
                     description:
