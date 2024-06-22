@@ -474,7 +474,11 @@ const isVerbose = process.argv.includes("-v");
 const inputFilePath = extractInputFilePathFromArgs();
 const meetingDate = parseMeetingDateFromFileName(inputFilePath);
 const meetingType = parseMeetingTypeFromFileName(inputFilePath);
-const meetingFromFile = await parseMeetingFile(await openMeetingFile(inputFilePath));
+const meetingFromFile = {
+    meetingDate,
+    meetingType,
+    ...(await parseMeetingFile(await openMeetingFile(inputFilePath))),
+};
 verboseLog("meetingFromFile:");
 verboseLog(meetingFromFile);
 const apiKey = extractApiKeyFromEnv();
@@ -589,7 +593,7 @@ if (meetingWithYouTubeTitles.presentations.length === 1) {
 }
 verboseLog("designIdeas:", designIdeas);
 const fileNamePrefix = getFileNamePrefix(meetingDate, meetingType);
-const outputDir = resolve(dirname(fileURLToPath(import.meta.url)), "..");
+const outputDir = resolve(dirname(fileURLToPath(import.meta.url)), ".."); // import.meta.url is /dist/src, using ".." goes up a directory to /dist
 const meetingWithImages = {
     ...meetingWithYouTubeTitles,
     image: await generateImage(openAi, designIdeas, outputDir, fileNamePrefix),
@@ -598,5 +602,4 @@ const meetingWithImages = {
 verboseLog("meetingWithImages:");
 verboseLog(meetingWithImages);
 
-// Save the updated meeting to the file
 await writeMeetingToFile(outputDir, `${fileNamePrefix}.json`, meetingWithImages);

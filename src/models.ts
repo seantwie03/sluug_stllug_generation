@@ -34,6 +34,8 @@ export const presentationSchema = z.object({
 export type Presentation = z.infer<typeof presentationSchema>;
 
 export const meetingSchema = z.object({
+    meetingDate: z.coerce.date().optional(),
+    meetingType: meetingTypeSchema.optional(),
     presentations: z.array(presentationSchema).min(1),
     meetupUrl: z.string().optional(),
     youtubeUrl: z.string().optional(),
