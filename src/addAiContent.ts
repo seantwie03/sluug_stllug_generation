@@ -596,7 +596,7 @@ const fileNamePrefix = getFileNamePrefix(meetingDate, meetingType);
 const outputDir = resolve(dirname(fileURLToPath(import.meta.url)), ".."); // import.meta.url is /dist/src, using ".." goes up a directory to /dist
 const meetingWithImages = {
     ...meetingWithYouTubeTitles,
-    image: await generateImage(openAi, designIdeas, outputDir, fileNamePrefix),
+    images: await generateImage(openAi, designIdeas, outputDir, fileNamePrefix),
 };
 
 verboseLog("meetingWithImages:");

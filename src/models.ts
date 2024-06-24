@@ -40,7 +40,7 @@ export const meetingSchema = z.object({
     meetupUrl: z.string().optional(),
     youtubeUrl: z.string().optional(),
     youtubeTitles: z.array(z.string()).optional(),
-    image: z.array(imageSchema).optional(),
+    images: z.array(imageSchema).optional(),
 });
 export type Meeting = z.infer<typeof meetingSchema>;
 
