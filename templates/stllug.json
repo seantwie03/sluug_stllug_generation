@@ -1,0 +1,23 @@
+{
+    "meetingDate": "2021-03-18",
+    "meetingType": "STLLUG",
+    "meetupUrl": "https://www.meetup.com/saint-louis-unix-users-group/events/271259458/",
+    "presentations": [
+        {
+            "title": "Local Kubernetes For Dummies",
+            "presenterNames": ["Andrew Denner"],
+            "abstract": "This presentation will serve as an intro to setting up and using a local instance of kubernetes, moving beyond docker and docker compose for local development work into more advanced tools like helm.",
+            "references": [
+                {
+                    "linkText": "Kubernetes",
+                    "url": "https://kubernetes.io/"
+                },
+                {
+                    "linkText": "Helm",
+                    "url": "https://helm.sh/"
+                }
+            ]
+        }
+    ],
+    "youtubeUrl": "https://www.youtube.com/watch?v=DZ5gaMZFoYM"
+}

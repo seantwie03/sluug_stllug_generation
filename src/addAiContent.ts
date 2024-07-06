@@ -50,31 +50,6 @@ function extractInputFilePathFromArgs(): string {
     return argv[2];
 }
 
-function parseMeetingDateFromFileName(filePath: string): Date {
-    const fileName = path.basename(filePath);
-    const datePart = fileName.slice(0, 10);
-    const timestamp = Date.parse(datePart);
-    if (isNaN(timestamp)) {
-        throw new Error(
-            "Invalid date format in file name. The JSON file name must start with a date in this format YYYY-MM-DD."
-        );
-    }
-    return new Date(timestamp);
-}
-
-function parseMeetingTypeFromFileName(filePath: string): MeetingType {
-    const fileName = path.basename(filePath);
-    if (fileName.endsWith("sluug.json")) {
-        return "SLUUG";
-    }
-    if (fileName.endsWith("stllug.json")) {
-        return "STLLUG";
-    }
-    throw new Error(
-        'Invalid file name. The file name must end with "sluug.json" or "stllug.json".'
-    );
-}
-
 function extractApiKeyFromEnv(): string {
     if (!process.env.OPENAI_API_KEY) {
         throw new Error("Environment Variable: OPENAI_API_KEY not found.");
@@ -106,13 +81,9 @@ async function parseMeetingFile(file: FileHandle): Promise<Meeting> {
 function convertPresentationToPrompt(
     presentation: Presentation,
     includePresenters = false,
-    meetingDate?: Date
+    meetingDate?: string
 ): string {
-    return `${
-        meetingDate
-            ? `This presentation will be given on: ${meetingDate.toISOString().slice(0, 10)}`
-            : ""
-    }.
+    return `${meetingDate ? `This presentation will be given on: ${meetingDate}` : ""}.
     The title of the presentation is: ${presentation.title}.
     ${includePresenters ? `The presenter(s) are: ${presentation.presenterNames.join()}.` : ""}
     This presentation abstract is as follows: ${presentation.abstract}
@@ -122,7 +93,7 @@ function convertPresentationToPrompt(
 function convertPresentationsToPrompt(
     presentations: Presentation[],
     includePresenters = false,
-    meetingDate?: Date
+    meetingDate?: string
 ): string {
     return presentations
         .map((presentation) =>
@@ -209,7 +180,7 @@ function tweetTool(args: TweetToolParams): string[] {
 async function generateTweets(
     openAi: OpenAI,
     presentation: Presentation,
-    meetingDate: Date
+    meetingDate: string
 ): Promise<Presentation> {
     console.log("Calling OpenAI API to generate tweets for presentation:", presentation.title);
     const result = await openAi.beta.chat.completions
@@ -256,17 +227,17 @@ async function generateTweets(
     if (!result) {
         throw new Error("OpenAI did not call the tool.");
     }
-    return { ...presentation, tweets: JSON.parse(result) as string[] };
+    return { ...presentation, tweet: JSON.parse(result) as string[] };
 }
 
 function addLinkToTweets(presentation: Presentation, meetupUrl: string | undefined): Presentation {
-    if (!presentation.tweets) {
+    if (!presentation.tweet) {
         throw new Error("Presentation does not contain any tweets");
     }
     // TODO: If meetupUrl is null, put SLUUG/STLLUG Site URL instead.
     return {
         ...presentation,
-        tweets: presentation.tweets.map((tweet) => `${tweet} ${meetupUrl}`.trimEnd()),
+        tweet: presentation.tweet.map((tweet) => `${tweet} ${meetupUrl}`.trimEnd()),
     };
 }
 
@@ -283,19 +254,21 @@ function youTubeTitleTool(args: YouTubeTitleToolParams): string[] {
     return args.titles;
 }
 
-function prefixTitleWithMeetingDateAndType(
+function suffixTitleWithMeetingDateAndType(
     generatedTitles: string[],
-    meetingDate: Date,
+    meetingDate: string,
     meetingType: MeetingType
 ): string[] {
     return generatedTitles.map((title) => {
-        return `${meetingType} ${meetingDate.toISOString().slice(0, 10)} - ${title}`;
+        return `${title} | ${meetingType} ${meetingDate}`;
     });
 }
 
 async function generateYouTubeTitleFromPrompt(
     openAi: OpenAI,
-    presentationPrompt: string
+    presentationPrompt: string,
+    meetingDate: string,
+    meetingType: MeetingType
 ): Promise<string[]> {
     console.log("Calling OpenAI API to generate YouTube Titles.");
     const result = await openAi.beta.chat.completions
@@ -343,7 +316,7 @@ async function generateYouTubeTitleFromPrompt(
         throw new Error("OpenAI did not call the tool.");
     }
     const generatedTitles = JSON.parse(result) as string[];
-    return prefixTitleWithMeetingDateAndType(generatedTitles, meetingDate, meetingType);
+    return suffixTitleWithMeetingDateAndType(generatedTitles, meetingDate, meetingType);
 }
 
 async function generateImageDesignIdeaFromPrompt(
@@ -382,8 +355,8 @@ async function generateImageDesignIdeaFromPrompt(
     return result.choices[0].message.content;
 }
 
-function getFileNamePrefix(meetingDate: Date, meetingType: MeetingType) {
-    return `${meetingDate.toISOString().slice(0, 10)}_${meetingType.toLowerCase()}`;
+function getFileNamePrefix(meetingDate: string, meetingType: MeetingType) {
+    return `${meetingDate}_${meetingType.toLowerCase()}`;
 }
 
 async function generateImage(
@@ -472,11 +445,9 @@ async function writeMeetingToFile(outputDir: string, outputFileName: string, mee
 // Main
 const isVerbose = process.argv.includes("-v");
 const inputFilePath = extractInputFilePathFromArgs();
-const meetingDate = parseMeetingDateFromFileName(inputFilePath);
-const meetingType = parseMeetingTypeFromFileName(inputFilePath);
+// const meetingDate = parseMeetingDateFromFileName(inputFilePath); // YYYY-MM-DD
+// const meetingType = parseMeetingTypeFromFileName(inputFilePath);
 const meetingFromFile = {
-    meetingDate,
-    meetingType,
     ...(await parseMeetingFile(await openMeetingFile(inputFilePath))),
 };
 verboseLog("meetingFromFile:");
@@ -507,7 +478,7 @@ const meetingWithTweets = {
             const presentationWithGeneratedTweets = await generateTweets(
                 openAi,
                 presentation,
-                meetingDate
+                meetingWithTags.meetingDate
             );
             const presentationWithFinishedTweets = addLinkToTweets(
                 presentationWithGeneratedTweets,
@@ -529,7 +500,9 @@ if (meetingWithTweets.presentations.length === 1) {
             await generateYouTubeTitleFromPrompt(
                 openAi,
                 // The zod schema specifies that at least one meeting should be passed in, so calling [0] index is safe.
-                convertPresentationToPrompt(meetingWithTweets.presentations[0])
+                convertPresentationToPrompt(meetingWithTweets.presentations[0]),
+                meetingWithTweets.meetingDate,
+                meetingWithTweets.meetingType
             )
         );
     }
@@ -539,7 +512,9 @@ if (meetingWithTweets.presentations.length === 1) {
         meetingWithTweets.presentations.map(async (presentation) => {
             return await generateYouTubeTitleFromPrompt(
                 openAi,
-                convertPresentationToPrompt(presentation)
+                convertPresentationToPrompt(presentation),
+                meetingWithTweets.meetingDate,
+                meetingWithTweets.meetingType
             );
         })
     );
@@ -548,13 +523,15 @@ if (meetingWithTweets.presentations.length === 1) {
     youTubeTitles = youTubeTitles.concat(
         await generateYouTubeTitleFromPrompt(
             openAi,
-            convertPresentationsToPrompt(meetingWithTweets.presentations)
+            convertPresentationsToPrompt(meetingWithTweets.presentations),
+            meetingWithTweets.meetingDate,
+            meetingWithTweets.meetingType
         )
     );
 }
 const meetingWithYouTubeTitles = {
     ...meetingWithTweets,
-    youTubeTitles,
+    youTubeTitle: youTubeTitles,
 };
 verboseLog("meetingWithYouTubeTitles:");
 verboseLog(meetingWithYouTubeTitles);
@@ -592,11 +569,14 @@ if (meetingWithYouTubeTitles.presentations.length === 1) {
     );
 }
 verboseLog("designIdeas:", designIdeas);
-const fileNamePrefix = getFileNamePrefix(meetingDate, meetingType);
+const fileNamePrefix = getFileNamePrefix(
+    meetingWithYouTubeTitles.meetingDate,
+    meetingWithYouTubeTitles.meetingType
+);
 const outputDir = resolve(dirname(fileURLToPath(import.meta.url)), ".."); // import.meta.url is /dist/src, using ".." goes up a directory to /dist
 const meetingWithImages = {
     ...meetingWithYouTubeTitles,
-    images: await generateImage(openAi, designIdeas, outputDir, fileNamePrefix),
+    image: await generateImage(openAi, designIdeas, outputDir, fileNamePrefix),
 };
 
 verboseLog("meetingWithImages:");

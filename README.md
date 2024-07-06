@@ -47,30 +47,20 @@ OpenAI API prices fluctuate. As of 2024-06-15, each run of this script costs app
     npm install
     ```
 
-3. **Create the Input File**: You need to create or obtain a JSON file that contains the meeting information. This script parses the file name to know the meeting date and meeting type (SLUUG or STLLUG). In order to parse correctly the input file must follow this naming convention:
-
-    - The first 10 digits of the file name are the date of the meeting in `YYYY-MM-DD` format.
-        - Example for January 21, 2021: 2021-01-21
-    - The end of the file name must be exactly `stllug.json` or `sluug.json`.
-    - See the files [test_data](test_data) folder for full examples.
-
-    The content inside the file must be valid JSON and follow a specific schema in order to parse correctly. At a minimum, the JSON file must have all the fields shown in the [test_data\2021-01-21_stllug.json](test_data\2021-01-21_stllug.json) example file. Ideally, you would add a bit of additional information, such as the `meetupUrl` and `references` as shown in the [test_data\2021-01-13_sluug.json](test_data\2021-01-13_sluug.json) example file. The script uses [zod](https://github.com/colinhacks/zod) to validate that the file contents matches this schema. If a mandatory field is missing you will receive an error message in your terminal.
+3. **Modify the Template File**: Inside the templates directory there is a `sluug.json` file as well as a `stllug.json` file. Modify the appropriate file based on the meeting you are preparing.
 
 ## Running the Script
+
+TODO: Fix Readme
 
 After completing the setup, you can run the script using:
 
 ```sh
-npm start -- <path-to-your-input-file>
+npm start:sluug
+npm start:stllug
 ```
 
-For example, if your input file is located in the root of the project:
-
-```sh
-npm start -- ./2024-02-14_sluug.json
-```
-
-The script typically takes approximately 45 seconds to run depending on OpenAI API response times. 
+The script typically takes approximately 1 minute to run depending on OpenAI API response times. 
 
 You can pass the `-v` argument to see verbose output.
 

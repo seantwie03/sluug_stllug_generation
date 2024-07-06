@@ -7,13 +7,13 @@ export const meetingTypeSchema = z.enum(["SLUUG", "STLLUG"]);
 export type MeetingType = z.infer<typeof meetingTypeSchema>;
 
 export const linkSchema = z.object({
-    url: z
-        .string()
-        .describe("URL to the reference. Example: 'https://linux.die.net/man/1/whereis'"),
     linkText: z
         .string()
         .optional()
         .describe("The display name of the link. Example: 'whereis man page'"),
+    url: z
+        .string()
+        .describe("URL to the reference. Example: 'https://linux.die.net/man/1/whereis'"),
 });
 export type Link = z.infer<typeof linkSchema>;
 
@@ -29,18 +29,19 @@ export const presentationSchema = z.object({
     abstract: z.string(),
     references: z.array(linkSchema).optional(),
     tags: z.array(z.string()).optional(),
-    tweets: z.array(z.string()).optional(),
+    tweet: z.array(z.string()).optional(),
 });
 export type Presentation = z.infer<typeof presentationSchema>;
 
 export const meetingSchema = z.object({
-    meetingDate: z.coerce.date().optional(),
-    meetingType: meetingTypeSchema.optional(),
+    // It is not worth dealing with Javascript's lackluster Date/TimeZone API here. Just keep it as a string.
+    meetingDate: z.string(), // YYYY-MM-DD
+    meetingType: meetingTypeSchema,
     presentations: z.array(presentationSchema).min(1),
     meetupUrl: z.string().optional(),
     youtubeUrl: z.string().optional(),
-    youtubeTitles: z.array(z.string()).optional(),
-    images: z.array(imageSchema).optional(),
+    youtubeTitle: z.array(z.string()).optional(),
+    image: z.array(imageSchema).optional(),
 });
 export type Meeting = z.infer<typeof meetingSchema>;
 

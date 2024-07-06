@@ -8,7 +8,8 @@
     "scripts": {
         "build": "tsc",
         "clean": "rimraf dist",
-        "start": "rimraf dist && tsc && node dist/src/addAiContent.js"
+        "start:sluug": "rimraf dist && tsc && node dist/src/addAiContent.js ./templates/sluug.json",
+        "start:stllug": "rimraf dist && tsc && node dist/src/addAiContent.js ./templates/stllug.json"
     },
     "author": "",
     "license": "ISC",
