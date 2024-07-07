@@ -234,10 +234,19 @@ function addLinkToTweets(presentation: Presentation, meetupUrl: string | undefin
     if (!presentation.tweet) {
         throw new Error("Presentation does not contain any tweets");
     }
-    // TODO: If meetupUrl is null, put SLUUG/STLLUG Site URL instead.
+
+    if (meetupUrl) {
+        return {
+            ...presentation,
+            tweet: presentation.tweet.map((tweet) => `${tweet} ${meetupUrl}`.trimEnd()),
+        };
+    }
+    // TODO: If meetupUrl is null, put SLUUG/STLLUG Site URL instead
+    // Right now site is deployed to placeholder URL.
+    // We do not know exactly what the link will be once it is fully deployed
     return {
         ...presentation,
-        tweet: presentation.tweet.map((tweet) => `${tweet} ${meetupUrl}`.trimEnd()),
+        tweet: presentation.tweet.map((tweet) => `${tweet}`.trimEnd()),
     };
 }
 
