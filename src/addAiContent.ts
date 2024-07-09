@@ -13,11 +13,11 @@ import {
     Presentation,
     TagToolParams,
     TweetToolParams,
-    YouTubeTitleToolParams,
+    YoutubeTitleToolParams,
     meetingSchema,
     tagToolParamsSchema,
     tweetToolParamsSchema,
-    youTubeTitleToolParamsSchema,
+    youtubeTitleToolParamsSchema,
     zodFunction,
 } from "./models.js";
 
@@ -259,7 +259,7 @@ function addLinkToTweets(presentation: Presentation, meetupUrl: string | undefin
  *             The Params has to be type Object due  to limitation with the OpenAI API.
  * @returns an array of short YouTube Titles for the presentation.
  */
-function youTubeTitleTool(args: YouTubeTitleToolParams): string[] {
+function youtubeTitleTool(args: YoutubeTitleToolParams): string[] {
     return args.titles;
 }
 
@@ -285,8 +285,8 @@ async function generateYouTubeTitleFromPrompt(
             model: "gpt-4o",
             tools: [
                 zodFunction({
-                    function: youTubeTitleTool,
-                    schema: youTubeTitleToolParamsSchema,
+                    function: youtubeTitleTool,
+                    schema: youtubeTitleToolParamsSchema,
                     description:
                         "Call this function to finalize three titles for the YouTube video of the presentation(s).",
                 }),
@@ -294,7 +294,7 @@ async function generateYouTubeTitleFromPrompt(
             tool_choice: {
                 type: "function",
                 function: {
-                    name: "youTubeTitleTool",
+                    name: "youtubeTitleTool",
                 },
             },
             messages: [
@@ -302,7 +302,7 @@ async function generateYouTubeTitleFromPrompt(
                     role: "system",
                     content:
                         sluugDescription +
-                        `The following presentation(s) were given to the St. Louis Linux/Unix Users Group. A video recording of the presentation(s) will be posted to YouTube. Please generate three Titles for the YouTube video. Do not include any hashtags. Then, call the youTubeTitleTool to finalize the titles.`,
+                        `The following presentation(s) were given to the St. Louis Linux/Unix Users Group. A video recording of the presentation(s) will be posted to YouTube. Please generate three Titles for the YouTube video. Do not include any hashtags. Then, call the youtubeTitleTool to finalize the titles.`,
                 },
                 {
                     role: "user",
@@ -501,11 +501,11 @@ verboseLog("meetingWithTweets:");
 verboseLog(meetingWithTweets);
 
 // Add YouTube Titles
-let youTubeTitles: string[] = [];
+let youtubeTitles: string[] = [];
 // If this is a meeting with a single presentation (STLLUG), generate three YouTube Titles for that presentation.
 if (meetingWithTweets.presentations.length === 1) {
     for (let i = 0; i < 3; i++) {
-        youTubeTitles = youTubeTitles.concat(
+        youtubeTitles = youtubeTitles.concat(
             await generateYouTubeTitleFromPrompt(
                 openAi,
                 // The zod schema specifies that at least one meeting should be passed in, so calling [0] index is safe.
@@ -527,9 +527,9 @@ if (meetingWithTweets.presentations.length === 1) {
             );
         })
     );
-    youTubeTitles = youTubeTitles.concat(titles.flat());
+    youtubeTitles = youtubeTitles.concat(titles.flat());
     // And generate YouTube Titles for all presentations combined.
-    youTubeTitles = youTubeTitles.concat(
+    youtubeTitles = youtubeTitles.concat(
         await generateYouTubeTitleFromPrompt(
             openAi,
             convertPresentationsToPrompt(meetingWithTweets.presentations),
@@ -540,7 +540,7 @@ if (meetingWithTweets.presentations.length === 1) {
 }
 const meetingWithYouTubeTitles = {
     ...meetingWithTweets,
-    youTubeTitle: youTubeTitles,
+    youtubeTitle: youtubeTitles,
 };
 verboseLog("meetingWithYouTubeTitles:");
 verboseLog(meetingWithYouTubeTitles);

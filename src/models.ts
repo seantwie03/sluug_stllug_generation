@@ -63,7 +63,7 @@ export const tagToolParamsSchema = z.object({
 });
 export type TagToolParams = z.infer<typeof tagToolParamsSchema>;
 
-export const youTubeTitleToolParamsSchema = z.object({
+export const youtubeTitleToolParamsSchema = z.object({
     titles: z
         .array(z.string())
         .length(3)
@@ -71,7 +71,7 @@ export const youTubeTitleToolParamsSchema = z.object({
             "An array of 3 three Titles for recording of the presentation(s) that will be posted to YouTube."
         ),
 });
-export type YouTubeTitleToolParams = z.infer<typeof youTubeTitleToolParamsSchema>;
+export type YoutubeTitleToolParams = z.infer<typeof youtubeTitleToolParamsSchema>;
 
 export const imageDesignsToolParamsSchema = z.object({
     designs: z
