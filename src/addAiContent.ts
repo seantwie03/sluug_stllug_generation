@@ -205,7 +205,7 @@ async function generateTweets(
                     role: "system",
                     content:
                         sluugDescription +
-                        "Please generate three short and enthusiastic tweets that summarize the following presentation to the St. Louis Unix Users Group. Use future-tense. Use the Presenter's full name rather than a nickname or a Twitter handle. Then call the tweetTool to finalize the Tweets.",
+                        "Please generate three short and enthusiastic tweets that summarize the following presentation to the Stl Linux Unix Users Group. Use future-tense. Use the Presenter's full name rather than a nickname or a Twitter handle. Then call the tweetTool to finalize the Tweets.",
                 },
                 {
                     role: "user",
@@ -302,7 +302,7 @@ async function generateYouTubeTitleFromPrompt(
                     role: "system",
                     content:
                         sluugDescription +
-                        `The following presentation(s) were given to the St. Louis Linux/Unix Users Group. A video recording of the presentation(s) will be posted to YouTube. Please generate three Titles for the YouTube video. Do not include any hashtags. Then, call the youtubeTitleTool to finalize the titles.`,
+                        `The following presentation(s) were given to the Stl Linux Unix Users Group. A video recording of the presentation(s) will be posted to YouTube. Please generate three Titles for the YouTube video. Do not include any hashtags. Then, call the youtubeTitleTool to finalize the titles.`,
                 },
                 {
                     role: "user",
@@ -340,7 +340,7 @@ async function generateImageDesignIdeaFromPrompt(
                 role: "system",
                 content:
                     sluugDescription +
-                    `The following presentation(s) will be given to the St. Louis Linux/Unix Users Group. Prior to the presentation(s), an announcement will be posted on our blog. To be more engaging the blog should have a large image at the top. The image should not include any words or letters. It should include the logos of the technologies covered in the presentations. The style should be futuristic and technology focused. Generate one design idea for this image.`,
+                    `The following presentation(s) will be given to the Stl Linux Unix Users Group. Prior to the presentation(s), an announcement will be posted on our blog. To be more engaging the blog should have a large image at the top. The image should not include any words or letters. It should include the logos of the technologies covered in the presentations. The style should be futuristic and technology focused. Generate one design idea for this image.`,
             },
             {
                 role: "user",
