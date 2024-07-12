@@ -340,7 +340,7 @@ async function generateImageDesignIdeaFromPrompt(
                 role: "system",
                 content:
                     sluugDescription +
-                    `The following presentation(s) will be given to the Stl Linux Unix Users Group. Prior to the presentation(s), an announcement will be posted on our blog. To be more engaging the blog should have a large image at the top. The image should not include any words or letters. It should include the logos of the technologies covered in the presentations. The style should be futuristic and technology focused. Generate one design idea for this image.`,
+                    `The following presentation(s) will be given to the Stl Linux Unix Users Group. Prior to the presentation(s), an announcement will be posted on our blog. To be more engaging the blog should have a large image at the top. The image should not include any words or letters. Try to include the logos of the technologies covered in the presentations. Generate one design idea for this image.`,
             },
             {
                 role: "user",
