@@ -51,8 +51,6 @@ OpenAI API prices fluctuate. As of 2024-06-15, each run of this script costs app
 
 ## Running the Script
 
-TODO: Fix Readme
-
 After completing the setup, you can run the script using:
 
 ```sh
@@ -62,13 +60,15 @@ npm start:stllug
 
 The script typically takes approximately 1 minute to run depending on OpenAI API response times. 
 
-You can pass the `-v` argument to see verbose output.
+You can pass the `-v` argument to see verbose output. Example:
+
+```sh
+npm start:sluug -- -v
+```
 
 ## Output
 
 The script outputs to the `dist` directory. After running the script you should see a JSON file and several images. The JSON file will contain the contents of the input file with additional AI-generated information added.
-
-To use these files on the `sluug_stllug_site`, copy them into the appropriate content directory.
 
 ## TODO
 
