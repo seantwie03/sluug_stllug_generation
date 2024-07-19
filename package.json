@@ -9,7 +9,8 @@
         "build": "tsc",
         "clean": "rimraf dist",
         "start:sluug": "rimraf dist && tsc && node dist/src/addAiContent.js ./templates/sluug.json",
-        "start:stllug": "rimraf dist && tsc && node dist/src/addAiContent.js ./templates/stllug.json"
+        "start:stllug": "rimraf dist && tsc && node dist/src/addAiContent.js ./templates/stllug.json",
+        "prepare": "husky"
     },
     "author": "",
     "license": "ISC",
@@ -23,6 +24,8 @@
         "@eslint/js": "^9.3.0",
         "@types/node": "^20.12.12",
         "eslint": "^8.57.0",
+        "husky": "^9.1.1",
+        "prettier": "^3.2.5",
         "rimraf": "^5.0.7",
         "typescript": "^5.4.5",
         "typescript-eslint": "^7.10.0"

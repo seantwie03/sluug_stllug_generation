@@ -44,7 +44,7 @@ export function verboseLog(...args: unknown[]) {
 function extractInputFilePathFromArgs(): string {
     if (argv.length < 3) {
         throw new Error(
-            "No file path provided. You must supply the path to a JSON file as an argument."
+            "No file path provided. You must supply the path to a JSON file as an argument.",
         );
     }
     return argv[2];
@@ -81,7 +81,7 @@ async function parseMeetingFile(file: FileHandle): Promise<Meeting> {
 function convertPresentationToPrompt(
     presentation: Presentation,
     includePresenters = false,
-    meetingDate?: string
+    meetingDate?: string,
 ): string {
     return `${meetingDate ? `This presentation will be given on: ${meetingDate}` : ""}.
     The title of the presentation is: ${presentation.title}.
@@ -93,11 +93,11 @@ function convertPresentationToPrompt(
 function convertPresentationsToPrompt(
     presentations: Presentation[],
     includePresenters = false,
-    meetingDate?: string
+    meetingDate?: string,
 ): string {
     return presentations
         .map((presentation) =>
-            convertPresentationToPrompt(presentation, includePresenters, meetingDate)
+            convertPresentationToPrompt(presentation, includePresenters, meetingDate),
         )
         .join("\n");
 }
@@ -180,7 +180,7 @@ function tweetTool(args: TweetToolParams): string[] {
 async function generateTweets(
     openAi: OpenAI,
     presentation: Presentation,
-    meetingDate: string
+    meetingDate: string,
 ): Promise<Presentation> {
     console.log("Calling OpenAI API to generate tweets for presentation:", presentation.title);
     const result = await openAi.beta.chat.completions
@@ -266,7 +266,7 @@ function youtubeTitleTool(args: YoutubeTitleToolParams): string[] {
 function suffixTitleWithMeetingDateAndType(
     generatedTitles: string[],
     meetingDate: string,
-    meetingType: MeetingType
+    meetingType: MeetingType,
 ): string[] {
     return generatedTitles.map((title) => {
         return `${title} | ${meetingType} ${meetingDate}`;
@@ -277,7 +277,7 @@ async function generateYouTubeTitleFromPrompt(
     openAi: OpenAI,
     presentationPrompt: string,
     meetingDate: string,
-    meetingType: MeetingType
+    meetingType: MeetingType,
 ): Promise<string[]> {
     console.log("Calling OpenAI API to generate YouTube Titles.");
     const result = await openAi.beta.chat.completions
@@ -330,7 +330,7 @@ async function generateYouTubeTitleFromPrompt(
 
 async function generateImageDesignIdeaFromPrompt(
     openAi: OpenAI,
-    presentationPrompt: string
+    presentationPrompt: string,
 ): Promise<string> {
     console.log("Calling OpenAI API to generate a design idea for the image.");
     const result = await openAi.chat.completions.create({
@@ -372,7 +372,7 @@ async function generateImage(
     openAi: OpenAI,
     designIdeas: string[],
     directoryPath: string,
-    fileNamePrefix: string
+    fileNamePrefix: string,
 ): Promise<Image[]> {
     return Promise.all(
         designIdeas.map(async (design, i) => {
@@ -419,7 +419,7 @@ async function generateImage(
                             const qualityForSize = Math.max(10, (2 * 1024 * 1024 * 80) / info.size); // Adjust quality based on initial compression
                             console.warn(
                                 "Image size is too large. Adjusting quality to",
-                                qualityForSize
+                                qualityForSize,
                             );
                             finalBuffer = await sharp(buffer)
                                 .png({ quality: qualityForSize })
@@ -435,7 +435,7 @@ async function generateImage(
             } catch (error) {
                 throw new Error(`Error generating image ${i}}:` + error);
             }
-        })
+        }),
     );
 }
 
@@ -473,7 +473,7 @@ const meetingWithTags = {
         meetingFromFile.presentations.map(async (presentation) => {
             const presentationWithGeneratedTags = await generateTags(openAi, presentation);
             return presentationWithGeneratedTags;
-        })
+        }),
     ),
 };
 verboseLog("meetingWithTags:");
@@ -487,14 +487,14 @@ const meetingWithTweets = {
             const presentationWithGeneratedTweets = await generateTweets(
                 openAi,
                 presentation,
-                meetingWithTags.meetingDate
+                meetingWithTags.meetingDate,
             );
             const presentationWithFinishedTweets = addLinkToTweets(
                 presentationWithGeneratedTweets,
-                meetingWithTags.meetupUrl
+                meetingWithTags.meetupUrl,
             );
             return presentationWithFinishedTweets;
-        })
+        }),
     ),
 };
 verboseLog("meetingWithTweets:");
@@ -511,8 +511,8 @@ if (meetingWithTweets.presentations.length === 1) {
                 // The zod schema specifies that at least one meeting should be passed in, so calling [0] index is safe.
                 convertPresentationToPrompt(meetingWithTweets.presentations[0]),
                 meetingWithTweets.meetingDate,
-                meetingWithTweets.meetingType
-            )
+                meetingWithTweets.meetingType,
+            ),
         );
     }
 } else {
@@ -523,9 +523,9 @@ if (meetingWithTweets.presentations.length === 1) {
                 openAi,
                 convertPresentationToPrompt(presentation),
                 meetingWithTweets.meetingDate,
-                meetingWithTweets.meetingType
+                meetingWithTweets.meetingType,
             );
-        })
+        }),
     );
     youtubeTitles = youtubeTitles.concat(titles.flat());
     // And generate YouTube Titles for all presentations combined.
@@ -534,8 +534,8 @@ if (meetingWithTweets.presentations.length === 1) {
             openAi,
             convertPresentationsToPrompt(meetingWithTweets.presentations),
             meetingWithTweets.meetingDate,
-            meetingWithTweets.meetingType
-        )
+            meetingWithTweets.meetingType,
+        ),
     );
 }
 const meetingWithYouTubeTitles = {
@@ -553,8 +553,8 @@ if (meetingWithYouTubeTitles.presentations.length === 1) {
         designIdeas.push(
             await generateImageDesignIdeaFromPrompt(
                 openAi,
-                convertPresentationToPrompt(meetingWithYouTubeTitles.presentations[0])
-            )
+                convertPresentationToPrompt(meetingWithYouTubeTitles.presentations[0]),
+            ),
         );
     }
 } else {
@@ -564,23 +564,23 @@ if (meetingWithYouTubeTitles.presentations.length === 1) {
             meetingWithYouTubeTitles.presentations.map(async (presentation) => {
                 return await generateImageDesignIdeaFromPrompt(
                     openAi,
-                    convertPresentationToPrompt(presentation)
+                    convertPresentationToPrompt(presentation),
                 );
-            })
-        )
+            }),
+        ),
     );
     // And generate one design idea for all presentations combined.
     designIdeas.push(
         await generateImageDesignIdeaFromPrompt(
             openAi,
-            convertPresentationsToPrompt(meetingWithYouTubeTitles.presentations)
-        )
+            convertPresentationsToPrompt(meetingWithYouTubeTitles.presentations),
+        ),
     );
 }
 verboseLog("designIdeas:", designIdeas);
 const fileNamePrefix = getFileNamePrefix(
     meetingWithYouTubeTitles.meetingDate,
-    meetingWithYouTubeTitles.meetingType
+    meetingWithYouTubeTitles.meetingType,
 );
 const outputDir = resolve(dirname(fileURLToPath(import.meta.url)), ".."); // import.meta.url is /dist/src, using ".." goes up a directory to /dist
 const meetingWithImages = {

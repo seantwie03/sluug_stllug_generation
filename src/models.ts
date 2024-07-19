@@ -58,7 +58,7 @@ export const tagToolParamsSchema = z.object({
         .array(z.string())
         .max(3)
         .describe(
-            "An array of 3 or less tags or categories this presentation should be filed under."
+            "An array of 3 or less tags or categories this presentation should be filed under.",
         ),
 });
 export type TagToolParams = z.infer<typeof tagToolParamsSchema>;
@@ -68,7 +68,7 @@ export const youtubeTitleToolParamsSchema = z.object({
         .array(z.string())
         .length(3)
         .describe(
-            "An array of 3 three Titles for recording of the presentation(s) that will be posted to YouTube."
+            "An array of 3 three Titles for recording of the presentation(s) that will be posted to YouTube.",
         ),
 });
 export type YoutubeTitleToolParams = z.infer<typeof youtubeTitleToolParamsSchema>;
