@@ -1,7 +1,7 @@
 {
-    "name": "ai_gen",
+    "name": "sluug_stllug_generation",
     "version": "1.0.0",
-    "description": "",
+    "description": "Used to supplement our regular meeting content with 'marketing' material that can be used to spread the word about our SLUUG and STLLUG meetings.",
     "type": "module",
     "main": "dist/addAiContent.js",
     "keywords": [],
@@ -12,8 +12,8 @@
         "start:stllug": "rimraf dist && tsc && node dist/src/addAiContent.js ./templates/stllug.json",
         "prepare": "husky"
     },
-    "author": "",
-    "license": "ISC",
+    "author": "SLUUG_Org Developers",
+    "license": "MIT",
     "dependencies": {
         "openai": "^4.49.1",
         "sharp": "^0.33.4",
