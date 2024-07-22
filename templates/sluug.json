@@ -1,5 +1,5 @@
 {
-    "meetingDate": "2021-03-10",
+    "meetingDate": "2024-03-10",
     "meetingType": "SLUUG",
     "meetupUrl": "https://www.meetup.com/saint-louis-unix-users-group/events/276192063/",
     "presentations": [
@@ -25,6 +25,5 @@
                 }
             ]
         }
-    ],
-    "youtubeUrl": "https://www.youtube.com/watch?v=JptaX3v7yjI"
+    ]
 }

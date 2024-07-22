@@ -1,5 +1,5 @@
 {
-    "meetingDate": "2021-03-18",
+    "meetingDate": "2024-03-18",
     "meetingType": "STLLUG",
     "meetupUrl": "https://www.meetup.com/saint-louis-unix-users-group/events/271259458/",
     "presentations": [
@@ -11,13 +11,8 @@
                 {
                     "linkText": "Kubernetes",
                     "url": "https://kubernetes.io/"
-                },
-                {
-                    "linkText": "Helm",
-                    "url": "https://helm.sh/"
                 }
             ]
         }
-    ],
-    "youtubeUrl": "https://www.youtube.com/watch?v=DZ5gaMZFoYM"
+    ]
 }
