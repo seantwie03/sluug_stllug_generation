@@ -55,9 +55,9 @@ This guide will help you run the script. Follow these steps to get started:
 After completing the setup, you can run the script using the appropriate command below:
 
 ```sh
-npm start:sluug
+npm run start:sluug
 # or
-npm start:stllug
+npm run start:stllug
 ```
 
 The script typically takes approximately 1 minute to run depending on OpenAI API response times.
@@ -65,7 +65,7 @@ The script typically takes approximately 1 minute to run depending on OpenAI API
 You can pass the `-v` argument to see verbose output. Example:
 
 ```sh
-npm start:sluug -- -v
+npm run start:sluug -- -v
 ```
 
 ## Output
